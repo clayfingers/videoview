@@ -79,7 +79,7 @@ public class CustomVideoView extends RelativeLayout {
         loadVideo(tempUrl, true, false);
 
         // Thumbnail Task
-        new CreagteThumbnailAsyncTask(new CreagteThumbnailAsyncTask.CreateThumbnailCompleteListener() {
+        new CreateThumbnailAsyncTask(new CreateThumbnailAsyncTask.CreateThumbnailCompleteListener() {
             @Override
             public void onCreateComplete(ByteArrayOutputStream stream) {
                 Glide.with(context)
