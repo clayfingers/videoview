@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">VideoView</string>
+    <string name="base_video_time">00:00</string>
 </resources>
