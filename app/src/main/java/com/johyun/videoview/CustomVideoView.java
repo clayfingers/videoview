@@ -47,6 +47,11 @@ public class CustomVideoView extends RelativeLayout {
 
     private int pausePos = 0;
     private boolean isStopVideo = false;
+    private long updateCycle = 100;
+
+    private Handler updateSeekBarAndTimeTextHandler = new Handler();
+
+    private String tempUrl = "http://www.sample-videos.com/video/mp4/720/big_buck_bunny_720p_2mb.mp4";
 
     public CustomVideoView(Context context) {
         super(context);
@@ -69,91 +74,106 @@ public class CustomVideoView extends RelativeLayout {
         initUi();
         setVideoViewHeight();
 
-        rl_custom_video_controller_wrapper.setVisibility(GONE);
+        rl_custom_video_controller_wrapper.setVisibility(GONE); // hide all controller
         pb_custom_video_progressBar.setVisibility(VISIBLE);
         iv_custom_video_thumbnail.setVisibility(VISIBLE);
         vv_custom_video.setVisibility(GONE);
 
-        String tempUrl = "https://archive.org/download/ksnn_compilation_master_the_internet/ksnn_compilation_master_the_internet_512kb.mp4";
+        loadVideo(tempUrl, true, true);
 
-        loadVideo(tempUrl, true, false);
+        vv_custom_video.setOnInfoListener(new MediaPlayer.OnInfoListener() {
+                @Override
+                public boolean onInfo(MediaPlayer mp, int what, int extra) {
+                    switch (what) {
+                        case MediaPlayer.MEDIA_INFO_BUFFERING_START:
+                            // Progress 출력
+                            break;
 
-        // Thumbnail Task
-        new CreateThumbnailAsyncTask(new CreateThumbnailAsyncTask.CreateThumbnailCompleteListener() {
-            @Override
-            public void onCreateComplete(ByteArrayOutputStream stream) {
-                Glide.with(context)
-                        .load(stream.toByteArray())
-                        .asBitmap()
-//                .placeholder(R.drawable.placeholder_image)
-//                .error(R.drawable.error_image)
-                        .into(iv_custom_video_thumbnail);
+                        case MediaPlayer.MEDIA_INFO_BUFFERING_END:
+                            // Progress 삭제
+                            break;
+                    }
+                    return false;
+                }
             }
-        }).execute(tempUrl);
+        );
 
-        // 동영상 플레이 버튼
-        iv_custom_video_play.setOnClickListener(new OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                iv_custom_video_play.setVisibility(GONE);
-                iv_custom_video_stop.setVisibility(VISIBLE);
-
-                seekTo(pausePos);
-                startVideo();
-                isStopVideo = false;
-            }
-        });
-
-        // 동영상 일시정지 버튼
-        iv_custom_video_stop.setOnClickListener(new OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                iv_custom_video_play.setVisibility(VISIBLE);
-                iv_custom_video_stop.setVisibility(GONE);
-                pauseVideo();
-                isStopVideo = true;
-            }
-        });
-
-        //동영상 준비
+        //동영상 준비 이벤트
         vv_custom_video.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
             @Override
             public void onPrepared(MediaPlayer mp) {
                 Log.d(TAG, "onPrepared");
 
-                rl_custom_video_controller_wrapper.setVisibility(VISIBLE);
+                rl_custom_video_controller_wrapper.setVisibility(VISIBLE); // show all controller
                 pb_custom_video_progressBar.setVisibility(GONE);
                 iv_custom_video_thumbnail.setVisibility(GONE);
                 vv_custom_video.setVisibility(VISIBLE);
 
                 sb_custom_video_seekbar.setMax(vv_custom_video.getDuration());
+
+                // seekbar 와 timeText 업데이트
+                updateSeekBarAndTimeTextHandler.postDelayed(updateSeekBarAndTimeTextRunnable, updateCycle);
+
+                // 동영상 플레이 버튼
+                iv_custom_video_play.setOnClickListener(new OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        iv_custom_video_play.setVisibility(GONE);
+                        iv_custom_video_stop.setVisibility(VISIBLE);
+
+                        isStopVideo = false;
+                        seekTo(pausePos);
+                        startVideo();
+                    }
+                });
+
+                // 동영상 일시정지 버튼
+                iv_custom_video_stop.setOnClickListener(new OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        iv_custom_video_play.setVisibility(VISIBLE);
+                        iv_custom_video_stop.setVisibility(GONE);
+
+                        isStopVideo = true;
+                        pauseVideo();
+                    }
+                });
+
+                vv_custom_video.setOnClickListener(new OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        rl_custom_video_controller_wrapper.setVisibility(rl_custom_video_controller_wrapper.getVisibility() == GONE ? VISIBLE : GONE);
+                    }
+                });
             }
         });
 
-        //동영상 재생 완료
+        //동영상 재생 완료 이벤트
         vv_custom_video.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
             @Override
             public void onCompletion(MediaPlayer mp) {
                 iv_custom_video_play.setVisibility(VISIBLE);
                 iv_custom_video_stop.setVisibility(GONE);
+
+                isStopVideo = true;
                 pauseVideo();
                 seekTo(0);
-                isStopVideo = true;
             }
         });
 
+        // 동영상 에러 이벤트
         vv_custom_video.setOnErrorListener(new MediaPlayer.OnErrorListener() {
             @Override
             public boolean onError(MediaPlayer mediaPlayer, int what, int extra) {
                 String msg;
-                if (extra == MediaPlayer.MEDIA_ERROR_TIMED_OUT) {
-                    msg = "Time Out";
+                if (what == MediaPlayer.MEDIA_ERROR_TIMED_OUT) {
+                    msg = "Video Load Time Out";
                 } else if (what == MediaPlayer.MEDIA_ERROR_SERVER_DIED) {
-                    msg = "Server Die";
+                    msg = "Video Load Server Die";
                 } else {
-                    msg = "Unknown Error";
+                    msg = "Video Load Unknown Error";
                 }
-                Log.d(TAG,msg);
+                Log.d(TAG, msg);
                 vv_custom_video.stopPlayback();
                 return false;
             }
@@ -186,7 +206,6 @@ public class CustomVideoView extends RelativeLayout {
     public void loadVideo(String url, boolean timeShow, boolean thumbnailShow) {
         Log.d(TAG, "loadVideo");
         vv_custom_video.setVideoURI(Uri.parse(url));
-//        vv_custom_video.setVideoPath(url);
         vv_custom_video.requestFocus();
 
         // 재생시간 숨김
@@ -194,41 +213,54 @@ public class CustomVideoView extends RelativeLayout {
             tv_custom_video_elapsed_time.setVisibility(GONE);
             tv_custom_video_total_time.setVisibility(GONE);
         }
+
+        // Thumbnail Task
+        if (thumbnailShow) {
+            new CreateThumbnailAsyncTask(new CreateThumbnailAsyncTask.CreateThumbnailCompleteListener() {
+                @Override
+                public void onCreateComplete(ByteArrayOutputStream stream) {
+                    Glide.with(context)
+                            .load(stream.toByteArray())
+                            .asBitmap()
+//                .placeholder(R.drawable.placeholder_image)
+//                .error(R.drawable.error_image)
+                            .into(iv_custom_video_thumbnail);
+                }
+            }).execute(tempUrl);
+        }
     }
 
     //동영상 플레이
     public void startVideo() {
         vv_custom_video.start();
-        updateSeekBarAndTime();
     }
 
     //동영상 일시정지
     public void pauseVideo() {
         vv_custom_video.pause();
-        pausePos = vv_custom_video.getCurrentPosition();
+        pausePos = vv_custom_video.getCurrentPosition(); // 현재 재생위치 저장
     }
 
     //동영상 재생 위치
-    public void seekTo(long timeMillisec) {
-        vv_custom_video.seekTo((int)timeMillisec);
+    //todo seekTo parameter type check
+    public void seekTo(long timeSec) {
+        vv_custom_video.seekTo((int)timeSec);
     }
 
-    private void updateSeekBarAndTime() {
-        new Handler().post(new Runnable() {
-            @Override
-            public void run() {
-                while(!isStopVideo) {
-                    sb_custom_video_seekbar.setProgress(vv_custom_video.getCurrentPosition());
-                    //todo setText 에러나는 이유???????
-//                    tv_custom_video_elapsed_time.setText(vv_custom_video.getCurrentPosition());
-//                    tv_custom_video_total_time.setText(vv_custom_video.getDuration());
-                }
+    private Runnable updateSeekBarAndTimeTextRunnable = new Runnable(){
+        public void run(){
+            if (!isStopVideo) {
+                sb_custom_video_seekbar.setProgress(vv_custom_video.getCurrentPosition());
+                //todo setText 에러나는 이유???????
+//             tv_custom_video_elapsed_time.setText(vv_custom_video.getCurrentPosition());
+//             tv_custom_video_total_time.setText(vv_custom_video.getDuration());
+                updateSeekBarAndTimeTextHandler.postDelayed(this, updateCycle);
             }
-        });
-    }
+        }
+    };
 
     private void setVideoViewHeight() {
-        RelativeLayout.LayoutParams layoutParams = (RelativeLayout.LayoutParams)rl_custom_video_wrapper.getLayoutParams();
+        RelativeLayout.LayoutParams layoutParams = (RelativeLayout.LayoutParams) rl_custom_video_wrapper.getLayoutParams();
         layoutParams.height = dpToPx((getDeviceWidth() * 9) / 16);
         rl_custom_video_wrapper.setLayoutParams(layoutParams);
 
