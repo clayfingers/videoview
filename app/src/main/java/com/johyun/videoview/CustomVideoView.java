@@ -86,8 +86,8 @@ public class CustomVideoView extends RelativeLayout {
 
         rl_custom_video_controller_wrapper.setVisibility(GONE); // hide all controller
         pb_custom_video_progressBar.setVisibility(VISIBLE);
-        iv_custom_video_thumbnail.setVisibility(VISIBLE);
-        vv_custom_video.setVisibility(GONE);
+//        iv_custom_video_thumbnail.setVisibility(VISIBLE);
+//        vv_custom_video.setVisibility(GONE);
 
         loadVideo(tempUrl, true, true);
 
@@ -125,7 +125,6 @@ public class CustomVideoView extends RelativeLayout {
 
                 rl_custom_video_controller_wrapper.setVisibility(VISIBLE); // show all controller
                 pb_custom_video_progressBar.setVisibility(GONE);
-                iv_custom_video_thumbnail.setVisibility(GONE);
                 vv_custom_video.setVisibility(VISIBLE);
 
                 sb_custom_video_seekbar.setMax(vv_custom_video.getDuration());
@@ -137,6 +136,7 @@ public class CustomVideoView extends RelativeLayout {
                 iv_custom_video_play.setOnClickListener(new OnClickListener() {
                     @Override
                     public void onClick(View view) {
+                        iv_custom_video_thumbnail.setVisibility(GONE);
                         iv_custom_video_play.setVisibility(GONE);
                         iv_custom_video_stop.setVisibility(VISIBLE);
 
@@ -187,6 +187,8 @@ public class CustomVideoView extends RelativeLayout {
                 });
             }
         });
+
+        vv_custom_video.setVideoPath(tempUrl);
 
         //동영상 재생 완료 이벤트
         vv_custom_video.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
@@ -291,8 +293,8 @@ public class CustomVideoView extends RelativeLayout {
             if (!isStopVideo) {
                 sb_custom_video_seekbar.setProgress(vv_custom_video.getCurrentPosition());
                 //todo setText 에러나는 이유???????
-             tv_custom_video_elapsed_time.setText(vv_custom_video.getCurrentPosition());
-             tv_custom_video_total_time.setText(vv_custom_video.getDuration());
+             tv_custom_video_elapsed_time.setText(vv_custom_video.getCurrentPosition() + "");
+             tv_custom_video_total_time.setText(vv_custom_video.getDuration() + "");
 
                 updateSeekBarAndTimeTextHandler.postDelayed(this, updateCycle);
             }

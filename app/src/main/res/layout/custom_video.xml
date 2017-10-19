@@ -14,8 +14,7 @@
         android:id="@+id/iv_custom_video_thumbnail"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="@android:color/black"
-        android:visibility="gone"/>
+        android:background="@android:color/black"/>
 
     <RelativeLayout
         android:id="@+id/rl_custom_video_controller_wrapper"
