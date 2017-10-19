@@ -1,10 +1,13 @@
 package com.johyun.videoview;
 
+import android.annotation.TargetApi;
 import android.content.Context;
 import android.content.res.Resources;
 import android.media.MediaPlayer;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Handler;
+import android.os.Looper;
 import android.util.AttributeSet;
 import android.util.DisplayMetrics;
 import android.util.Log;
@@ -49,9 +52,10 @@ public class CustomVideoView extends RelativeLayout {
     private boolean isStopVideo = false;
     private long updateCycle = 100;
 
-    private Handler updateSeekBarAndTimeTextHandler = new Handler();
+    private Handler updateSeekBarAndTimeTextHandler = new Handler(Looper.getMainLooper());
 
-    private String tempUrl = "http://www.sample-videos.com/video/mp4/720/big_buck_bunny_720p_2mb.mp4";
+//    private String tempUrl = "http://www.sample-videos.com/video/mp4/720/big_buck_bunny_720p_2mb.mp4";
+    private String tempUrl = "http://www.sample-videos.com/video/mp4/720/big_buck_bunny_720p_1mb.mp4";
 
     public CustomVideoView(Context context) {
         super(context);
@@ -65,6 +69,12 @@ public class CustomVideoView extends RelativeLayout {
 
     public CustomVideoView(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
+        initView(context);
+    }
+
+    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
+    public CustomVideoView(Context context, AttributeSet attrs, int defStyleAttr, int defStyleRes) {
+        super(context, attrs, defStyleAttr, defStyleRes);
         initView(context);
     }
 
@@ -87,10 +97,12 @@ public class CustomVideoView extends RelativeLayout {
                     switch (what) {
                         case MediaPlayer.MEDIA_INFO_BUFFERING_START:
                             // Progress 출력
+                            Log.d(TAG, "MEDIA_INFO_BUFFERING_START");
                             break;
 
                         case MediaPlayer.MEDIA_INFO_BUFFERING_END:
                             // Progress 삭제
+                            Log.d(TAG, "MEDIA_INFO_BUFFERING_END");
                             break;
                     }
                     return false;
@@ -103,6 +115,13 @@ public class CustomVideoView extends RelativeLayout {
             @Override
             public void onPrepared(MediaPlayer mp) {
                 Log.d(TAG, "onPrepared");
+
+                mp.setOnBufferingUpdateListener(new MediaPlayer.OnBufferingUpdateListener() {
+                    @Override
+                    public void onBufferingUpdate(MediaPlayer mediaPlayer, int percent) {
+                        Log.d(TAG, "onBufferingUpdate percent = " + percent);
+                    }
+                });
 
                 rl_custom_video_controller_wrapper.setVisibility(VISIBLE); // show all controller
                 pb_custom_video_progressBar.setVisibility(GONE);
@@ -136,6 +155,27 @@ public class CustomVideoView extends RelativeLayout {
 
                         isStopVideo = true;
                         pauseVideo();
+                    }
+                });
+
+                iv_custom_video_share.setOnClickListener(new OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        //todo share logic
+                    }
+                });
+
+                iv_custom_video_full_screen.setOnClickListener(new OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        //todo full screen logic
+                    }
+                });
+
+                iv_custom_video_sound.setOnClickListener(new OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        //todo sound logic
                     }
                 });
 
@@ -242,7 +282,6 @@ public class CustomVideoView extends RelativeLayout {
     }
 
     //동영상 재생 위치
-    //todo seekTo parameter type check
     public void seekTo(long timeSec) {
         vv_custom_video.seekTo((int)timeSec);
     }
@@ -252,8 +291,9 @@ public class CustomVideoView extends RelativeLayout {
             if (!isStopVideo) {
                 sb_custom_video_seekbar.setProgress(vv_custom_video.getCurrentPosition());
                 //todo setText 에러나는 이유???????
-//             tv_custom_video_elapsed_time.setText(vv_custom_video.getCurrentPosition());
-//             tv_custom_video_total_time.setText(vv_custom_video.getDuration());
+             tv_custom_video_elapsed_time.setText(vv_custom_video.getCurrentPosition());
+             tv_custom_video_total_time.setText(vv_custom_video.getDuration());
+
                 updateSeekBarAndTimeTextHandler.postDelayed(this, updateCycle);
             }
         }

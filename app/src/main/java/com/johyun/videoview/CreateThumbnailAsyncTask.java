@@ -3,6 +3,7 @@ package com.johyun.videoview;
 import android.graphics.Bitmap;
 import android.media.MediaMetadataRetriever;
 import android.os.AsyncTask;
+import android.util.Log;
 
 import java.io.ByteArrayOutputStream;
 import java.util.HashMap;
@@ -16,7 +17,7 @@ public class CreateThumbnailAsyncTask extends AsyncTask<String, Void, Boolean> {
     private static final String TAG = CreateThumbnailAsyncTask.class.getSimpleName();
 
     public interface CreateThumbnailCompleteListener {
-        public void onCreateComplete(ByteArrayOutputStream stream);
+        void onCreateComplete(ByteArrayOutputStream stream);
     }
 
     private CreateThumbnailCompleteListener createThumbnailCompleteListener;
@@ -28,6 +29,8 @@ public class CreateThumbnailAsyncTask extends AsyncTask<String, Void, Boolean> {
 
     @Override
     protected Boolean doInBackground(String... strings) {
+
+        Log.d(TAG, "CreateThumbnailAsyncTask doInBackground");
 
         MediaMetadataRetriever mediaMetadataRetriever = null;
         try {
@@ -54,6 +57,7 @@ public class CreateThumbnailAsyncTask extends AsyncTask<String, Void, Boolean> {
         super.onPostExecute(result);
 
         if (result) {
+            Log.d(TAG, "CreateThumbnailAsyncTask onPostExecute");
             createThumbnailCompleteListener.onCreateComplete(stream);
         }
     }
