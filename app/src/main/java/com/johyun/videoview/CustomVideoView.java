@@ -7,7 +7,6 @@ import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Handler;
-import android.os.Looper;
 import android.util.AttributeSet;
 import android.util.DisplayMetrics;
 import android.util.Log;
@@ -52,7 +51,7 @@ public class CustomVideoView extends RelativeLayout {
     private boolean isStopVideo = false;
     private long updateCycle = 100;
 
-    private Handler updateSeekBarAndTimeTextHandler = new Handler(Looper.getMainLooper());
+    private Handler updateSeekBarAndTimeTextHandler = new Handler();
 
 //    private String tempUrl = "http://www.sample-videos.com/video/mp4/720/big_buck_bunny_720p_2mb.mp4";
     private String tempUrl = "http://www.sample-videos.com/video/mp4/720/big_buck_bunny_720p_1mb.mp4";
@@ -86,10 +85,9 @@ public class CustomVideoView extends RelativeLayout {
 
         rl_custom_video_controller_wrapper.setVisibility(GONE); // hide all controller
         pb_custom_video_progressBar.setVisibility(VISIBLE);
-//        iv_custom_video_thumbnail.setVisibility(VISIBLE);
-//        vv_custom_video.setVisibility(GONE);
 
         loadVideo(tempUrl, true, true);
+        startVideo();
 
         vv_custom_video.setOnInfoListener(new MediaPlayer.OnInfoListener() {
                 @Override
@@ -103,6 +101,7 @@ public class CustomVideoView extends RelativeLayout {
                         case MediaPlayer.MEDIA_INFO_BUFFERING_END:
                             // Progress 삭제
                             Log.d(TAG, "MEDIA_INFO_BUFFERING_END");
+                            pauseVideo();
                             break;
                     }
                     return false;
@@ -120,12 +119,14 @@ public class CustomVideoView extends RelativeLayout {
                     @Override
                     public void onBufferingUpdate(MediaPlayer mediaPlayer, int percent) {
                         Log.d(TAG, "onBufferingUpdate percent = " + percent);
+                        if (percent == 100) {
+
+                            iv_custom_video_thumbnail.setVisibility(GONE);
+                            rl_custom_video_controller_wrapper.setVisibility(VISIBLE); // show all controller
+                            pb_custom_video_progressBar.setVisibility(GONE);
+                        }
                     }
                 });
-
-                rl_custom_video_controller_wrapper.setVisibility(VISIBLE); // show all controller
-                pb_custom_video_progressBar.setVisibility(GONE);
-                vv_custom_video.setVisibility(VISIBLE);
 
                 sb_custom_video_seekbar.setMax(vv_custom_video.getDuration());
 
@@ -136,7 +137,6 @@ public class CustomVideoView extends RelativeLayout {
                 iv_custom_video_play.setOnClickListener(new OnClickListener() {
                     @Override
                     public void onClick(View view) {
-                        iv_custom_video_thumbnail.setVisibility(GONE);
                         iv_custom_video_play.setVisibility(GONE);
                         iv_custom_video_stop.setVisibility(VISIBLE);
 
@@ -188,12 +188,13 @@ public class CustomVideoView extends RelativeLayout {
             }
         });
 
-        vv_custom_video.setVideoPath(tempUrl);
+//        vv_custom_video.setVideoPath(tempUrl);
 
         //동영상 재생 완료 이벤트
         vv_custom_video.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
             @Override
             public void onCompletion(MediaPlayer mp) {
+                Log.d(TAG, "setOnCompletionListener onCompletion");
                 iv_custom_video_play.setVisibility(VISIBLE);
                 iv_custom_video_stop.setVisibility(GONE);
 
@@ -244,17 +245,8 @@ public class CustomVideoView extends RelativeLayout {
     }
 
     //영상정보 로드
-    //todo 스트리밍 됬다 안됬다 하는 이유?????????
     public void loadVideo(String url, boolean timeShow, boolean thumbnailShow) {
         Log.d(TAG, "loadVideo");
-        vv_custom_video.setVideoURI(Uri.parse(url));
-        vv_custom_video.requestFocus();
-
-        // 재생시간 숨김
-        if (!timeShow) {
-            tv_custom_video_elapsed_time.setVisibility(GONE);
-            tv_custom_video_total_time.setVisibility(GONE);
-        }
 
         // Thumbnail Task
         if (thumbnailShow) {
@@ -269,6 +261,15 @@ public class CustomVideoView extends RelativeLayout {
                             .into(iv_custom_video_thumbnail);
                 }
             }).execute(tempUrl);
+        }
+
+        vv_custom_video.setVideoURI(Uri.parse(url));
+        vv_custom_video.requestFocus();
+
+        // 재생시간 숨김
+        if (!timeShow) {
+            tv_custom_video_elapsed_time.setVisibility(GONE);
+            tv_custom_video_total_time.setVisibility(GONE);
         }
     }
 
@@ -292,9 +293,8 @@ public class CustomVideoView extends RelativeLayout {
         public void run(){
             if (!isStopVideo) {
                 sb_custom_video_seekbar.setProgress(vv_custom_video.getCurrentPosition());
-                //todo setText 에러나는 이유???????
-             tv_custom_video_elapsed_time.setText(vv_custom_video.getCurrentPosition() + "");
-             tv_custom_video_total_time.setText(vv_custom_video.getDuration() + "");
+                tv_custom_video_elapsed_time.setText(String.valueOf(vv_custom_video.getCurrentPosition()));
+                tv_custom_video_total_time.setText(String.valueOf(vv_custom_video.getDuration()));
 
                 updateSeekBarAndTimeTextHandler.postDelayed(this, updateCycle);
             }
@@ -326,9 +326,6 @@ public class CustomVideoView extends RelativeLayout {
     }
 
     //todo 스크롤해서 화면에서 안보이면 영상 정지
-    private boolean isShowVideoView() {
-        return rl_custom_video_wrapper.isShown();
-    }
 
     //UI 초기화
     private void initUi() {
