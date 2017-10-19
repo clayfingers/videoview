@@ -19,9 +19,13 @@
             android:layout_height="wrap_content"
             android:orientation="vertical">
 
-            <com.johyun.videoview.CustomVideoView
+            <com.johyun.videoview.ExoVideoPlayer
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content" />
+
+            <!--<com.johyun.videoview.CustomVideoView-->
+                <!--android:layout_width="match_parent"-->
+                <!--android:layout_height="wrap_content" />-->
 
             <View
                 android:layout_width="match_parent"
