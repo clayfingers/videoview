@@ -12,7 +12,7 @@
             <shape android:shape="rectangle">
                 <size android:height="4dp" />
                 <corners android:radius="2dp" />
-                <solid android:color="@color/lightOrange" />
+                <solid android:color="@color/colorExoProgress" />
             </shape>
         </clip>
     </item>
@@ -22,7 +22,7 @@
             <shape android:shape="rectangle">
                 <size android:height="4dp" />
                 <corners android:radius="2dp" />
-                <solid android:color="@color/secondaryProgress" />
+                <solid android:color="@color/colorExoSecondaryProgress" />
             </shape>
         </clip>
     </item>
