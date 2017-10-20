@@ -3,7 +3,8 @@
     <color name="colorPrimary">#3F51B5</color>
     <color name="colorPrimaryDark">#303F9F</color>
     <color name="colorAccent">#FF4081</color>
-    <color name="lightOrange">#fa664e</color>
-    <color name="secondaryProgress">#ffada0</color>
+    <color name="colorExoProgress">#fa664e</color>
+    <color name="colorExoSecondaryProgress">#ffada0</color>
     <color name="white">#ffffff</color>
+    <color name="whiteAlpha50">#80ffffff</color>
 </resources>
