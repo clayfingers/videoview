@@ -1,6 +1,7 @@
 package com.johyun.videoview;
 
 import android.annotation.TargetApi;
+import android.app.Dialog;
 import android.content.Context;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
@@ -11,6 +12,7 @@ import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
@@ -120,6 +122,7 @@ public class ExoVideoPlayer extends RelativeLayout implements ExoPlayer.EventLis
         playerView.setUseArtwork(true);
 
         createThumbnail();
+        initFullscreen();
 
         //todo stop video when video view out of screen
 
@@ -128,7 +131,10 @@ public class ExoVideoPlayer extends RelativeLayout implements ExoPlayer.EventLis
             @Override
             public void onClick(View view) {
                 Log.d(TAG, "onClick FULL SCREEN");
-                //todo full screen logic
+                if (!isExoPlayerFullscreen)
+                    openFullscreen();
+                else
+                    closeFullscreen();
             }
         });
 
@@ -228,19 +234,37 @@ public class ExoVideoPlayer extends RelativeLayout implements ExoPlayer.EventLis
         exoPlayer = null;
     }
 
-    // 백그라운드로 내려갈때
-    public void goToBackground(){
-        if(exoPlayer != null){
-            isPlayerPlaying = exoPlayer.getPlayWhenReady();
-            exoPlayer.setPlayWhenReady(false);
-        }
+    private Dialog fullScreenDialog;
+    private boolean isExoPlayerFullscreen = false;
+
+    private void initFullscreen() {
+
+        fullScreenDialog = new Dialog(context, android.R.style.Theme_Black_NoTitleBar_Fullscreen) {
+            public void onBackPressed() {
+                if (isExoPlayerFullscreen)
+                    closeFullscreen();
+                super.onBackPressed();
+            }
+        };
     }
 
-    //포어그라운드로 올라올때
-    public void goToForeground(){
-        if(exoPlayer != null){
-            exoPlayer.setPlayWhenReady(isPlayerPlaying);
-        }
+    private void openFullscreen() {
+
+        ((ViewGroup) playerView.getParent()).removeView(playerView);
+        fullScreenDialog.addContentView(playerView, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+        isExoPlayerFullscreen = true;
+        fullScreenDialog.show();
+        //todo app 이 landscape 지원 하는 지 확인, 지원하지 않는다면 full screen 의 영상이 가로모드인지 확인
+//        ((Activity) context).setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
+    }
+
+    private void closeFullscreen() {
+
+        ((ViewGroup) playerView.getParent()).removeView(playerView);
+        rl_exo_player_wrapper.addView(playerView);
+        isExoPlayerFullscreen = false;
+        fullScreenDialog.dismiss();
+//        ((Activity) context).setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
     }
 
     @Override
