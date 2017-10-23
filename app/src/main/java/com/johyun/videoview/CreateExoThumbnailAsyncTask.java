@@ -36,7 +36,7 @@ public class CreateExoThumbnailAsyncTask extends AsyncTask<String, Void, Boolean
         try {
             mediaMetadataRetriever = new MediaMetadataRetriever();
             mediaMetadataRetriever.setDataSource(strings[0], new HashMap<String, String>());
-            bitmap = mediaMetadataRetriever.getFrameAtTime(10000);
+            bitmap = mediaMetadataRetriever.getFrameAtTime(3000);
 
             return true;
         } catch (Exception e) {
