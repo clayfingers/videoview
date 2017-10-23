@@ -26,7 +26,7 @@ public class FullscreenVideoActivity extends AppCompatActivity {
 
         // 아이콘 바꿔줌
         ImageView iv_exo_player_full_screen = (ImageView)findViewById(R.id.iv_exo_player_full_screen);
-        iv_exo_player_full_screen.setImageDrawable(ContextCompat.getDrawable(this, R.drawable.shrink));
+        iv_exo_player_full_screen.setImageDrawable(ContextCompat.getDrawable(this, R.drawable.btn_shrink));
 
         // 풀스크린 클릭리스너
         iv_exo_player_full_screen.setOnClickListener(
